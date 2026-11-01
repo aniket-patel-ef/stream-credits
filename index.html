@@ -17,7 +17,8 @@
     <div class="hero__mark" aria-hidden="true"><span></span><span></span><span></span></div>
     <div>
       <h1>Stream Credits</h1>
-      <p>Movie-style end credits for your Twitch stream. It quietly counts chat, follows, subs, gift subs, bits and raids while you're live, then rolls the credits when you switch to your ending scene.</p>
+      <p>Movie-style end credits for your Twitch stream. It quietly counts chat, follows, subs, gift subs, bits and raids while you're live, then rolls the credits when you switch to your ending scene.
+        <a href="https://github.com/aniket-patel-ef/stream-credits/blob/main/QUICKSTART.md" target="_blank" rel="noopener">First time? Read the quick start →</a></p>
     </div>
   </header>
 
@@ -163,7 +164,7 @@
           <li>Make an <b>Ending</b> scene (or use your existing one).</li>
           <li>Add a <b>Browser</b> source, paste the link, set <b>Width 1920</b> and <b>Height 1080</b>.</li>
           <li>Leave <b>“Shutdown source when not visible”</b> <u>unchecked</u> — the source has to stay running during the whole stream to count chat. Leave “Refresh browser when scene becomes active” unchecked too.</li>
-          <li>Go live as usual. When you switch to the Ending scene, the credits roll from the top.</li>
+          <li>Go live as usual. When you switch to the Ending scene, the credits start rolling.</li>
         </ol>
 
         <details class="help">
@@ -173,7 +174,7 @@
             <li><b>New stream = fresh credits.</b> A new session starts automatically when Twitch reports a new broadcast. After you end the stream the last credits stay available (great for an offline screen).</li>
             <li><b>Offline / BRB screen:</b> add a second copy with <i>Start rolling: as soon as it loads</i>, <i>Loop</i> and a <i>Solid</i> background. Copies share data; only one of them talks to Twitch.</li>
             <li><b>Meld Studio:</b> add it as a browser layer and use <i>As soon as the source loads</i>.</li>
-            <li><b>Token expiry:</b> Twitch logins expire eventually. If the stats panel says “token expired”, reconnect here and paste the new link into OBS.</li>
+            <li><b>Token expiry:</b> Twitch logins expire eventually. If a red notice appears in the corner of the credits, reconnect here and paste the new link into OBS.</li>
           </ul>
         </details>
 

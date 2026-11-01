@@ -4,6 +4,8 @@ Movie-style end credits for Twitch streams. It's one OBS browser source: it list
 
 **Setup page:** https://aniket-patel-ef.github.io/stream-credits/ · **Try it:** [demo credits](https://aniket-patel-ef.github.io/stream-credits/credits.html#demo=1&start=load&loop=1&bg=solid) with made-up data
 
+> **Just want it on your stream?** Follow the [quick start](QUICKSTART.md), a 10-minute click-by-click guide. The rest of this page is the detail.
+
 ![Glass theme: title card, starring and top chatters](docs/glass.jpg)
 
 | | |
