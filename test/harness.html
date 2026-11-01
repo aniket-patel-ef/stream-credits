@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Stream Credits — fake Twitch harness</title>
+  <!--
+    Dev tool: runs the real overlay against a fake Twitch (EventSub WebSocket + Helix),
+    then simulates a stream. Open via a local server: http://localhost:8125/test/harness.html
+    Press R to roll the credits, D for the stats panel.
+  -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Outfit:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../css/credits.css">
+  <script>
+    // ---- fake Twitch ---------------------------------------------------------------------
+    localStorage.removeItem('sc:session:100');
+    localStorage.removeItem('sc:prev:100');
+    if (!location.hash) location.hash = 'token=fake&start=manual&debug=1';
+
+    const STREAM = { id: 'live-1', user_id: '100', title: 'testing the credits ♡', game_name: 'Just Chatting', viewer_count: 23, started_at: new Date(Date.now() - 95 * 60000).toISOString() };
+    window.fakeLog = [];
+
+    const json = (body, status) => new Response(JSON.stringify(body), { status: status || 200, headers: { 'Content-Type': 'application/json' } });
+    window.fetch = async (input, init) => {
+      const url = new URL(typeof input === 'string' ? input : input.toString());
+      window.fakeLog.push((init && init.method || 'GET') + ' ' + url.pathname + url.search);
+      if (url.host === 'id.twitch.tv') return json({ client_id: 'fakeclient', login: 'shiari', user_id: '100', scopes: ['user:read:chat', 'moderator:read:followers', 'moderator:read:chatters'], expires_in: 4000000 });
+      switch (url.pathname) {
+        case '/helix/users': {
+          const ids = url.searchParams.getAll('id');
+          if (url.searchParams.get('login')) return json({ data: [{ id: '100', login: 'shiari', display_name: 'Shiari', profile_image_url: avatar('Shiari', '#ff6fae') }] });
+          return json({ data: ids.map((id) => ({ id, login: 'u' + id, display_name: 'U' + id, profile_image_url: avatar(id, '#7ad7ff') })) });
+        }
+        case '/helix/streams': return json({ data: [STREAM] });
+        case '/helix/eventsub/subscriptions': return json({ data: [{}] }, 202);
+        case '/helix/channels/followers': return json({ data: [{ user_id: '900', user_login: 'earlybird', user_name: 'EarlyBird', followed_at: new Date(Date.now() - 60 * 60000).toISOString() }], pagination: {} });
+        case '/helix/chat/chatters': return json({ data: [{ user_id: '950', user_login: 'silentsam', user_name: 'SilentSam' }, { user_id: '1', user_login: 'alice', user_name: 'Alice' }], pagination: {} });
+        default: return json({ message: 'not faked' }, 404);
+      }
+    };
+
+    function avatar(text, color) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="${color}"/><text x="32" y="42" font-size="28" font-family="sans-serif" text-anchor="middle" fill="#fff">${String(text)[0]}</text></svg>`;
+      return 'data:image/svg+xml,' + encodeURIComponent(svg);
+    }
+
+    class FakeSocket {
+      constructor(url) {
+        this.url = url;
+        this.readyState = 0;
+        window.fakeSocket = this;
+        setTimeout(() => {
+          this.readyState = 1;
+          this.emit({ metadata: { message_id: 'w', message_type: 'session_welcome' }, payload: { session: { id: 'sess-1', keepalive_timeout_seconds: 10 } } });
+        }, 30);
+        this.ka = setInterval(() => this.emit({ metadata: { message_id: 'k' + Math.random(), message_type: 'session_keepalive' }, payload: {} }), 8000);
+      }
+      emit(msg) { if (this.onmessage) this.onmessage({ data: JSON.stringify(msg) }); }
+      close() { this.readyState = 3; clearInterval(this.ka); if (this.onclose) this.onclose({}); }
+    }
+    FakeSocket.CLOSING = 2;
+    window.WebSocket = FakeSocket;
+
+    let n = 0;
+    window.notify = (type, event) => window.fakeSocket.emit({
+      metadata: { message_id: 'n' + (++n), message_type: 'notification', subscription_type: type },
+      payload: { subscription: { type }, event: Object.assign({ broadcaster_user_id: '100', source_broadcaster_user_id: null }, event) },
+    });
+    const who = (id, name) => ({ chatter_user_id: id, chatter_user_login: name.toLowerCase(), chatter_user_name: name, chatter_is_anonymous: false });
+    window.chat = (id, name, extra) => notify('channel.chat.message', Object.assign(who(id, name), { message_id: 'm' + (++n), color: '#9b8cff', badges: [], cheer: null }, extra || {}));
+
+    // ---- simulated stream ------------------------------------------------------------------
+    window.simulate = () => {
+      for (let i = 0; i < 12; i++) chat('1', 'Alice');
+      for (let i = 0; i < 7; i++) chat('2', 'Bob', { badges: [{ set_id: 'moderator' }] });
+      for (let i = 0; i < 3; i++) chat('3', 'Carol');
+      chat('4', 'Nightbot');
+      chat('3', 'Carol', { cheer: { bits: 300 } });
+      notify('channel.follow', { user_id: '5', user_login: 'dave', user_name: 'Dave', followed_at: new Date().toISOString() });
+      notify('channel.chat.notification', Object.assign(who('6', 'Erin'), { message_id: 'x1', notice_type: 'resub', resub: { sub_tier: '1000', cumulative_months: 9, is_prime: false } }));
+      notify('channel.chat.notification', Object.assign(who('7', 'Frank'), { message_id: 'x2', notice_type: 'community_sub_gift', community_sub_gift: { id: 'cg', total: 2, sub_tier: '1000' } }));
+      ['8', '9'].forEach((id, i) => notify('channel.chat.notification', Object.assign(who('7', 'Frank'), { message_id: 'x3' + i, notice_type: 'sub_gift', sub_gift: { recipient_user_id: id, recipient_user_login: 'r' + id, recipient_user_name: 'Recipient' + id, sub_tier: '1000', community_gift_id: 'cg' } })));
+      notify('channel.chat.notification', Object.assign(who('10', 'RaiderRita'), { message_id: 'x4', notice_type: 'raid', raid: { user_id: '10', user_login: 'raiderrita', user_name: 'RaiderRita', viewer_count: 31, profile_image_url: '' } }));
+    };
+    window.addEventListener('load', () => setTimeout(window.simulate, 800));
+  </script>
+</head>
+<body>
+  <main id="stage" class="stage">
+    <div class="backdrop" aria-hidden="true"></div>
+    <div class="viewport"></div>
+  </main>
+  <div id="status" class="status" data-level="idle">Starting…</div>
+  <aside id="debug" class="debug" hidden></aside>
+
+  <script src="../js/core.js"></script>
+  <script src="../js/twitch.js"></script>
+  <script src="../js/collector.js"></script>
+  <script src="../js/roller.js"></script>
+  <script src="../js/overlay.js"></script>
+</body>
+</html>

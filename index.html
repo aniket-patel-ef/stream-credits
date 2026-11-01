@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Stream Credits</title>
+  <meta name="description" content="Movie-style end credits for your Twitch stream: top chatters, supporters, subs, follows, bits and raids — an OBS browser source.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%239146ff'/%3E%3Cpath d='M18 20h28M18 32h28M24 44h16' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Outfit:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/setup.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__mark" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div>
+      <h1>Stream Credits</h1>
+      <p>Movie-style end credits for your Twitch stream. It quietly counts chat, follows, subs, gift subs, bits and raids while you're live, then rolls the credits when you switch to your ending scene.</p>
+    </div>
+  </header>
+
+  <main class="layout">
+    <div class="steps">
+
+      <!-- 1 · Connect -->
+      <section class="step" id="step-connect">
+        <h2><span class="num">1</span>Connect Twitch</h2>
+
+        <div id="account" class="account" hidden>
+          <img id="account-avatar" alt="" referrerpolicy="no-referrer">
+          <div class="account__text">
+            <strong id="account-name"></strong>
+            <span id="account-expiry"></span>
+          </div>
+          <button type="button" class="btn btn--ghost" id="disconnect">Disconnect</button>
+        </div>
+
+        <div id="connect-form">
+          <label class="field" id="client-field">
+            <span>Twitch app Client ID</span>
+            <input id="client" autocomplete="off" spellcheck="false" placeholder="e.g. gp762nuuoqcoxypju8c569th9wz7q5">
+          </label>
+          <details class="help" id="client-help">
+            <summary>Where do I get a Client ID? (2 minutes, one time)</summary>
+            <ol>
+              <li>Open <a href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">dev.twitch.tv/console/apps</a> and click <b>Register Your Application</b> (Twitch asks for 2FA on your account).</li>
+              <li><b>Name:</b> anything unique, like <code>yourname-stream-credits</code>.</li>
+              <li><b>OAuth Redirect URLs:</b> paste this exactly:
+                <div class="copyline"><code id="redirect-uri"></code><button type="button" class="btn btn--tiny" data-copy="#redirect-uri">Copy</button></div>
+              </li>
+              <li><b>Category:</b> Broadcaster Suite · <b>Client Type:</b> Public.</li>
+              <li>Click <b>Create</b>, then <b>Manage</b>, and copy the <b>Client ID</b> into the box above. Client IDs aren't secret.</li>
+            </ol>
+          </details>
+          <button type="button" class="btn btn--twitch" id="connect">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0 1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+            Connect with Twitch
+          </button>
+          <p class="hint">Read-only: it asks to <b>read chat</b>, <b>read followers</b> and <b>see who's in chat</b>. It never posts anything.</p>
+        </div>
+
+        <p class="error" id="connect-error" hidden></p>
+
+        <label class="field field--inline">
+          <span>Channel <em>(only if you're a mod setting this up for someone else)</em></span>
+          <input id="channel" data-opt="channel" autocomplete="off" spellcheck="false" placeholder="your own channel">
+        </label>
+      </section>
+
+      <!-- 2 · Style -->
+      <section class="step" id="step-style">
+        <h2><span class="num">2</span>Make it yours</h2>
+
+        <fieldset class="themes">
+          <legend>Theme</legend>
+          <label class="theme theme--glass"><input type="radio" name="theme" value="glass" data-opt="theme"><span class="theme__swatch"></span><b>Glass</b><small>Neon-glass cards, like the viral one</small></label>
+          <label class="theme theme--kawaii"><input type="radio" name="theme" value="kawaii" data-opt="theme"><span class="theme__swatch"></span><b>Kawaii</b><small>Pastel, round, sparkly ✦</small></label>
+          <label class="theme theme--cinema"><input type="radio" name="theme" value="cinema" data-opt="theme"><span class="theme__swatch"></span><b>Cinema</b><small>Classic serif movie credits</small></label>
+        </fieldset>
+
+        <div class="grid2">
+          <label class="field">
+            <span>Background</span>
+            <select data-opt="bg">
+              <option value="none">Transparent (over your camera)</option>
+              <option value="dim">Dimmed</option>
+              <option value="solid">Solid (offline screen)</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Accent colour</span>
+            <div class="color">
+              <input type="color" id="accent-picker" value="#ffd23f">
+              <input id="accent" data-opt="accent" placeholder="theme default" spellcheck="false" maxlength="7">
+              <button type="button" class="btn btn--tiny btn--ghost" id="accent-reset">Reset</button>
+            </div>
+          </label>
+          <label class="field"><span>Title</span><input data-opt="title"></label>
+          <label class="field"><span>Tagline</span><input data-opt="tagline"></label>
+          <label class="field"><span>End card</span><input data-opt="outro"></label>
+          <label class="field"><span>End card subtitle</span><input data-opt="outro2"></label>
+        </div>
+
+        <div class="grid2">
+          <label class="field">
+            <span>Scroll speed <output id="speed-out"></output></span>
+            <input type="range" min="30" max="300" step="5" data-opt="speed">
+          </label>
+          <label class="field">
+            <span>…or fit the whole roll into <em>(seconds, 0 = use speed)</em></span>
+            <input type="number" min="0" max="900" step="5" data-opt="duration">
+          </label>
+          <label class="field">
+            <span>Keep the end card up for <em>(seconds)</em></span>
+            <input type="number" min="0" max="600" step="1" data-opt="hold">
+          </label>
+          <label class="field">
+            <span>People in each top list</span>
+            <input type="number" min="1" max="50" step="1" data-opt="top">
+          </label>
+          <label class="field">
+            <span>Start rolling</span>
+            <select data-opt="start">
+              <option value="active">When its scene goes live in OBS (recommended)</option>
+              <option value="load">As soon as the source loads</option>
+              <option value="manual">Only when I press R (Interact window)</option>
+            </select>
+          </label>
+          <label class="field field--check">
+            <input type="checkbox" data-opt="loop">
+            <span>Loop forever <em>(nice for an offline / BRB screen)</em></span>
+          </label>
+        </div>
+
+        <fieldset class="sections">
+          <legend>Sections <em>(empty ones are skipped automatically)</em></legend>
+          <div id="section-chips" class="chips"></div>
+        </fieldset>
+
+        <label class="field">
+          <span>Leave these accounts out <em>(comma separated — common bots like Nightbot are already skipped)</em></span>
+          <input data-opt="ignore" placeholder="mybot, alt_account" spellcheck="false">
+        </label>
+      </section>
+
+      <!-- 3 · OBS -->
+      <section class="step" id="step-obs">
+        <h2><span class="num">3</span>Add it to OBS</h2>
+
+        <div class="urlbox" id="urlbox">
+          <code id="obs-url"></code>
+          <div class="urlbox__actions">
+            <button type="button" class="btn" id="copy-url">Copy OBS link</button>
+            <a class="btn btn--ghost" id="open-url" target="_blank" rel="noopener">Test in browser</a>
+          </div>
+        </div>
+        <p class="warn" id="url-warn">Connect Twitch first — until then this link only shows demo data.</p>
+        <p class="hint" id="token-hint" hidden>This link contains your Twitch login token. Don't show it on stream or share it.</p>
+
+        <ol class="howto">
+          <li>Make an <b>Ending</b> scene (or use your existing one).</li>
+          <li>Add a <b>Browser</b> source, paste the link, set <b>Width 1920</b> and <b>Height 1080</b>.</li>
+          <li>Leave <b>“Shutdown source when not visible”</b> <u>unchecked</u> — the source has to stay running during the whole stream to count chat. Leave “Refresh browser when scene becomes active” unchecked too.</li>
+          <li>Go live as usual. When you switch to the Ending scene, the credits roll from the top.</li>
+        </ol>
+
+        <details class="help">
+          <summary>Tips &amp; troubleshooting</summary>
+          <ul>
+            <li><b>Check it's counting:</b> right-click the source → <b>Interact</b>, press <kbd>D</kbd> for a live stats panel. <kbd>R</kbd> rolls the credits, <kbd>S</kbd> stops, <kbd>Shift</kbd>+<kbd>X</kbd> twice wipes the session.</li>
+            <li><b>New stream = fresh credits.</b> A new session starts automatically when Twitch reports a new broadcast. After you end the stream the last credits stay available (great for an offline screen).</li>
+            <li><b>Offline / BRB screen:</b> add a second copy with <i>Start rolling: as soon as it loads</i>, <i>Loop</i> and a <i>Solid</i> background. Copies share data; only one of them talks to Twitch.</li>
+            <li><b>Meld Studio:</b> add it as a browser layer and use <i>As soon as the source loads</i>.</li>
+            <li><b>Token expiry:</b> Twitch logins expire eventually. If the stats panel says “token expired”, reconnect here and paste the new link into OBS.</li>
+          </ul>
+        </details>
+
+        <div class="demo-line">
+          <span>Want to try OBS without connecting?</span>
+          <button type="button" class="btn btn--tiny btn--ghost" id="copy-demo">Copy demo link</button>
+        </div>
+      </section>
+    </div>
+
+    <aside class="preview">
+      <div class="preview__frame" id="preview-frame">
+        <div class="preview__scene" aria-hidden="true"></div>
+        <iframe id="preview" title="Credits preview" scrolling="no"></iframe>
+      </div>
+      <div class="preview__bar">
+        <span>Live preview · demo data</span>
+        <button type="button" class="btn btn--tiny btn--ghost" id="replay">↻ Replay</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="foot">Made with ♡ for streamers · runs entirely in your browser / OBS — no server, no account.</footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/twitch.js"></script>
+  <script src="js/setup.js"></script>
+</body>
+</html>
