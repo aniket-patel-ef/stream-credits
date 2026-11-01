@@ -2,6 +2,8 @@
 
 Movie-style end credits for Twitch streams. It's one OBS browser source: it listens to your channel while you stream, then rolls a credits sequence of the people who showed up. There's no server, no Streamlabs account and nothing to install.
 
+**Setup page:** https://aniket-patel-ef.github.io/stream-credits/ · **Try it:** [demo credits](https://aniket-patel-ef.github.io/stream-credits/credits.html#demo=1&start=load&loop=1&bg=solid) with made-up data
+
 ![Glass theme: title card, starring and top chatters](docs/glass.jpg)
 
 | | |
@@ -56,8 +58,9 @@ Twitch Helix (polling) ─────►  stream info, past follows,   rolls wh
 1. Go to [dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps) and click **Register Your Application**.
 2. **Name:** anything, e.g. `sia-stream-credits` (it must be unique on Twitch).
 3. **OAuth Redirect URLs:** the address of the setup page, exactly as the setup page shows it under "Where do I get a Client ID?". For example:
-   - `http://localhost:8125/` when running locally;
-   - `https://<your-github-user>.github.io/stream-credits/` when hosted on GitHub Pages.
+   - `https://aniket-patel-ef.github.io/stream-credits/` for the hosted setup page;
+   - `https://<your-github-user>.github.io/stream-credits/` for your own fork on GitHub Pages;
+   - `http://localhost:8125/` when running locally.
 
    You can add both.
 4. **Category:** Broadcaster Suite. **Client Type:** Public.
@@ -67,7 +70,7 @@ Optionally, put the Client ID in [`js/config.js`](js/config.js) so the setup pag
 
 ### 2. Open the setup page
 
-Host the folder somewhere. GitHub Pages is free and means OBS doesn't depend on a local server. Or run it locally:
+Use the hosted page at https://aniket-patel-ef.github.io/stream-credits/. You can also host your own copy (fork it and turn on GitHub Pages), so that OBS doesn't depend on a local server. Or run it locally:
 
 ```bash
 npm start   # serves http://localhost:8125 (needs python3)
